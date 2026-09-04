@@ -205,6 +205,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
-    pip install aiogram aiosqlite
-    python bot.py
     
