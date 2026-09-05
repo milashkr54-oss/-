@@ -9,10 +9,10 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.filters import Command
 
 # ========== НАСТРОЙКИ ==========
-API_TOKEN = '8758331684:AAHzhf0Px-MzVtHk1m6mzCZRPONWbsgdOLc'
+API_TOKEN = 'СЮДА_ВСТАВЬ_ТОКЕН'
 BOT_NAME = 'Мой Тап Бот'
 COIN_NAME = 'COINS'
-WEB_APP_URL = 'https://frolicking-strudel-7063c5.netlify.app/'
+WEB_APP_URL = 'СЮДА_ВСТАВЬ_ССЫЛКУ_ОТ_NETLIFY'
 REF_BONUS = 1000
 PORT = int(os.environ.get('PORT', 5000))
 
@@ -241,5 +241,7 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    threading.Thread(target=lambda: app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)).start()
-    asyncio.run(main())
+    # Запускаем бота в фоновом потоке
+    threading.Thread(target=lambda: asyncio.run(main()), daemon=True).start()
+    # Flask в главном потоке
+    app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
