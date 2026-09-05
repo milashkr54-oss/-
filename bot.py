@@ -1,6 +1,9 @@
 import asyncio
 import aiosqlite
 import random
+import threading
+import os
+from flask import Flask, request, jsonify
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
@@ -11,6 +14,7 @@ BOT_NAME = 'Мой Тап Бот'
 COIN_NAME = 'COINS'
 WEB_APP_URL = 'https://frolicking-strudel-7063c5.netlify.app/'
 REF_BONUS = 1000
+PORT = int(os.environ.get('PORT', 5000))
 
 # ========== БАЗА ДАННЫХ ==========
 DB_NAME = 'database.db'
@@ -185,6 +189,39 @@ async def back_callback(callback: CallbackQuery):
     await callback.answer()
     await callback.message.answer('Главное меню:', reply_markup=get_menu())
 
+# ========== FLASK СЕРВЕР ДЛЯ ИГРЫ ==========
+app = Flask(__name__)
+
+@app.route('/save', methods=['POST'])
+def save_data():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    balance = data.get('balance')
+    taps = data.get('taps')
+    power = data.get('power')
+    
+    async def save():
+        async with aiosqlite.connect(DB_NAME) as db:
+            await db.execute('UPDATE users SET balance = ?, total_taps = ?, power = ? WHERE user_id = ?', (balance, taps, power, user_id))
+            await db.commit()
+    
+    asyncio.run(save())
+    return jsonify({'status': 'ok'})
+
+@app.route('/load', methods=['GET'])
+def load_data():
+    user_id = request.args.get('user_id')
+    
+    async def load():
+        async with aiosqlite.connect(DB_NAME) as db:
+            async with db.execute('SELECT balance, total_taps, power FROM users WHERE user_id = ?', (user_id,)) as cursor:
+                return await cursor.fetchone()
+    
+    user = asyncio.run(load())
+    if user:
+        return jsonify({'balance': user[0], 'taps': user[1], 'power': user[2]})
+    return jsonify({'balance': 0, 'taps': 0, 'power': 1})
+
 # ========== ЗАПУСК ==========
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
@@ -204,5 +241,5 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
+    threading.Thread(target=lambda: app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)).start()
     asyncio.run(main())
-    
