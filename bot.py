@@ -1,8 +1,8 @@
 import asyncio
 import aiosqlite
 import random
-import threading
 import os
+import threading
 from flask import Flask, request, jsonify
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
@@ -14,7 +14,7 @@ BOT_NAME = 'Мой Тап Бот'
 COIN_NAME = 'COINS'
 WEB_APP_URL = 'https://frolicking-strudel-7063c5.netlify.app/'
 REF_BONUS = 1000
-PORT = int(os.environ.get('PORT', 5000))
+PORT = int(os.environ.get('PORT', 10000))
 
 # ========== БАЗА ДАННЫХ ==========
 DB_NAME = 'database.db'
@@ -46,11 +46,6 @@ async def get_user(user_id):
 async def update_balance(user_id, amount):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute('UPDATE users SET balance = balance + ? WHERE user_id = ?', (amount, user_id))
-        await db.commit()
-
-async def update_taps(user_id):
-    async with aiosqlite.connect(DB_NAME) as db:
-        await db.execute('UPDATE users SET total_taps = total_taps + 1 WHERE user_id = ?', (user_id,))
         await db.commit()
 
 async def update_power(user_id, price):
@@ -189,7 +184,7 @@ async def back_callback(callback: CallbackQuery):
     await callback.answer()
     await callback.message.answer('Главное меню:', reply_markup=get_menu())
 
-# ========== FLASK СЕРВЕР ДЛЯ ИГРЫ ==========
+# ========== FLASK СЕРВЕР ==========
 app = Flask(__name__)
 
 @app.route('/save', methods=['POST'])
@@ -226,7 +221,7 @@ def load_data():
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-async def main():
+async def run_bot():
     await db_start()
     
     dp.message.register(start_cmd, Command('start'))
@@ -241,7 +236,10 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    # Запускаем бота в фоновом потоке
-    threading.Thread(target=lambda: asyncio.run(main()), daemon=True).start()
-    # Flask в главном потоке
+    def start_bot():
+        asyncio.run(run_bot())
+    
+    t = threading.Thread(target=start_bot, daemon=True)
+    t.start()
+    
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
