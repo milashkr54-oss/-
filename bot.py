@@ -2,7 +2,6 @@ import asyncio
 import aiosqlite
 import random
 import os
-import threading
 from flask import Flask, request, jsonify
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
@@ -236,10 +235,18 @@ async def run_bot():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    def start_bot():
-        asyncio.run(run_bot())
+    # Запускаем бота в том же потоке, где Flask
+    import threading
+    import time
     
-    t = threading.Thread(target=start_bot, daemon=True)
+    # Создаем новый event loop для бота
+    def run_async_bot():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(run_bot())
+    
+    t = threading.Thread(target=run_async_bot, daemon=True)
     t.start()
     
+    # Flask в главном потоке
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
