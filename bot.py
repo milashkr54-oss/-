@@ -9,10 +9,10 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.filters import Command
 
 # ========== НАСТРОЙКИ ==========
-API_TOKEN = 'СЮДА_ВСТАВЬ_ТОКЕН'
+API_TOKEN = '8758331684:AAHzhf0Px-MzVtHk1m6mzCZRPONWbsgdOLc'
 BOT_NAME = 'Мой Тап Бот'
 COIN_NAME = 'COINS'
-WEB_APP_URL = 'СЮДА_ВСТАВЬ_ССЫЛКУ_ОТ_NETLIFY'
+WEB_APP_URL = 'https://frolicking-strudel-7063c5.netlify.app/'
 REF_BONUS = 1000
 PORT = int(os.environ.get('PORT', 5000))
 
